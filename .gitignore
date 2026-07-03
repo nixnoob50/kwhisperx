@@ -37,3 +37,6 @@ models/
 # Debug artifacts
 *.wav
 *.log
+
+# Project notes
+notes/
