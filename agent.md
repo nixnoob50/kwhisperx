@@ -54,6 +54,29 @@ Verify on X11: `echo $XDG_SESSION_TYPE` should print `x11`.
 3. [kwhisperx/inject.py](kwhisperx/inject.py) — X11 text injection
 4. [kwhisperx/config.py](kwhisperx/config.py) — settings schema
 
+## Versioning and changelog
+
+**Current version:** see `kwhisperx/__init__.py` (`__version__`) and `pyproject.toml` (`version`). Keep these in sync.
+
+**Whenever you make significant changes**, update all of the following in the same work session:
+
+1. **Bump the version** in both files using [Semantic Versioning](https://semver.org/):
+   - **PATCH** (0.2.0 → 0.2.1): bug fixes, minor tweaks
+   - **MINOR** (0.2.0 → 0.3.0): new features, backward compatible
+   - **MAJOR** (0.2.0 → 1.0.0): breaking changes
+2. **Append an entry** to [CHANGELOG.md](CHANGELOG.md) under a new `## [x.y.z] - YYYY-MM-DD` heading with `Added`, `Changed`, `Fixed`, or `Removed` sections as appropriate.
+
+Significant changes include: new user-facing features, behavior changes, bug fixes users would notice, dependency or setup changes, and breaking config/API changes. Trivial edits (typos, comments only) do not require a version bump.
+
+Example changelog entry:
+
+```markdown
+## [0.2.1] - 2026-07-04
+
+### Fixed
+- Tray icon not updating after failed injection
+```
+
 ## Do not
 
 - Add Wayland support without explicit request

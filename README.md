@@ -2,6 +2,8 @@
 
 Voice dictation tray app for **Kubuntu on X11**. Press a global hotkey to start/stop listening; when you stop, faster-whisper transcribes locally and the text is pasted into whatever window had focus.
 
+**Version:** 0.2.0 — see [CHANGELOG.md](CHANGELOG.md) for release history.
+
 ## Requirements
 
 System packages (Kubuntu):

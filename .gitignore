@@ -1,0 +1,39 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+pip-wheel-metadata/
+
+# Test / lint / type check caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Editors
+*.swp
+*.swo
+*~
+.DS_Store
+.idea/
+.vscode/
+
+# Local Whisper model downloads (if stored in-repo)
+models/
+*.ready
+
+# Debug artifacts
+*.wav
+*.log
