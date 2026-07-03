@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=KWhisperX
+Comment=Voice dictation for Kubuntu X11
+Exec=INSTALL_PATH/run.sh
+Icon=audio-input-microphone
+Terminal=false
+Categories=Utility;
+StartupNotify=false
+X-KDE-autostart-after=panel
