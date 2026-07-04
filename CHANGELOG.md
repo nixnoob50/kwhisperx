@@ -5,6 +5,15 @@ All notable changes to KWhisperX are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.5] - 2026-07-04
+
+### Added
+- Unit test suite (`tests/`, 46 tests) and `./run_tests.sh` runner covering streaming, injection, tray icons, and other regressions
+
+### Fixed
+- Streaming stop injecting hallucinated text from silent remainder after a pause chunk was already inserted
+- Do not amplify near-silent audio before Whisper transcription
+
 ## [0.3.4] - 2026-07-04
 
 ### Added

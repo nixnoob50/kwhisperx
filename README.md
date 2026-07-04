@@ -2,7 +2,7 @@
 
 Voice dictation tray app for **Kubuntu on X11**. Press a global hotkey to start/stop listening; when you stop, faster-whisper transcribes locally and the text is pasted into whatever window had focus.
 
-**Version:** 0.3.4 — see [CHANGELOG.md](CHANGELOG.md) for release history.
+**Version:** 0.3.5 — see [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## Requirements
 
@@ -33,6 +33,16 @@ cd kwhisperx
 ```
 
 The app appears in the system tray. Default hotkey: **Ctrl+Alt+Space** (toggle mode).
+
+## Tests
+
+Unit tests cover regressions (silence detection, streaming chunks, injection modes, tray icons, single-instance lock). No microphone or GPU required:
+
+```bash
+./run_tests.sh
+```
+
+Install dev dependencies first if needed: `.venv/bin/pip install pytest` or `.venv/bin/pip install -e ".[dev]"`.
 
 ## Usage
 

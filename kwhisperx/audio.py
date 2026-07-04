@@ -83,6 +83,8 @@ def prepare_for_transcription(audio: np.ndarray) -> np.ndarray:
         return audio
     if audio.dtype != np.float32:
         audio = audio.astype(np.float32)
+    if audio_rms(audio) < MIN_SPEECH_RMS:
+        return audio
     peak = float(np.max(np.abs(audio)))
     if 1e-8 < peak < 0.12:
         audio = audio * (0.95 / peak)
@@ -262,6 +264,36 @@ def find_utterance_boundary(
         return None
 
     return speech_end
+
+
+def has_speech(
+    audio: np.ndarray,
+    *,
+    min_speech_sec: float = DEFAULT_MIN_SPEECH_SEC,
+    samplerate: int = SAMPLE_RATE,
+    pause_noise_floor: float = DEFAULT_PAUSE_NOISE_FLOOR,
+) -> bool:
+    """True when the buffer contains enough active speech (not just mic noise or trailing silence)."""
+    if audio is None or len(audio) == 0:
+        return False
+
+    window = max(1, int(VAD_WINDOW_SEC * samplerate))
+    min_speech_samples = int(min_speech_sec * samplerate)
+    if len(audio) < min_speech_samples:
+        return False
+
+    n_windows = len(audio) // window
+    if n_windows < 1:
+        return False
+
+    levels = [audio_rms(audio[i * window : (i + 1) * window]) for i in range(n_windows)]
+    peak = max(levels)
+    noise_floor = _estimate_noise_floor(levels)
+    threshold = _pause_silence_threshold(peak, pause_noise_floor)
+    speech_samples = sum(window for level in levels if level > threshold)
+    if speech_samples >= min_speech_samples:
+        return True
+    return False
 
 
 class AudioRecorder:

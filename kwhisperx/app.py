@@ -13,7 +13,7 @@ from PyQt6.QtCore import QObject, QThread, QTimer, Qt, QSize, pyqtSignal
 from PyQt6.QtGui import QAction, QColor, QIcon, QPainter, QPixmap
 from PyQt6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
-from kwhisperx.audio import AudioRecorder, audio_rms, effective_pause_drop_ratio, has_audio
+from kwhisperx.audio import AudioRecorder, audio_rms, effective_pause_drop_ratio, has_audio, has_speech
 from kwhisperx.config import Config
 from kwhisperx.dbus_service import DbusService
 from kwhisperx.hotkey import HotkeyManager
@@ -408,13 +408,22 @@ class DictationApp(QObject):
             self._recorder.stop_stream()
             self._streaming_finishing = True
 
-            if has_audio(remainder):
+            if has_speech(
+                remainder,
+                pause_noise_floor=self.config.pause_noise_floor,
+            ):
                 log.info(
                     "Streaming remainder %.2fs (RMS=%.5f)",
                     len(remainder) / self._recorder.samplerate,
                     audio_rms(remainder),
                 )
                 self._enqueue_chunk(remainder, is_final=True)
+            elif has_audio(remainder):
+                log.info(
+                    "Skipping silent streaming remainder %.2fs (RMS=%.5f)",
+                    len(remainder) / self._recorder.samplerate,
+                    audio_rms(remainder),
+                )
             elif (
                 self._chunk_count == 0
                 and not self._pending_jobs
