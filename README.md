@@ -2,7 +2,7 @@
 
 Voice dictation tray app for **Kubuntu on X11**. Press a global hotkey to start/stop listening; when you stop, faster-whisper transcribes locally and the text is pasted into whatever window had focus.
 
-**Version:** 0.2.3 — see [CHANGELOG.md](CHANGELOG.md) for release history.
+**Version:** 0.3.3 — see [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## Requirements
 
@@ -65,8 +65,15 @@ Requirements (one-time, outside the app):
 CTranslate2 still uses `device="cuda"` internally for ROCm. KWhisperX sets `CT2_CUDA_ALLOCATOR=cub_caching` when **amd** is selected (helps many RDNA2 cards).
 | Language | en |
 | Injection | auto (clipboard → terminal → keystrokes) |
+| Streaming | off (optional; keystrokes / terminal only) |
 
 Config file: `~/.config/kwhisperx/config.json`
+
+### Streaming (optional)
+
+For **keystrokes** or **terminal** injection, enable **Inject on pauses (streaming)** in Settings. While listening, KWhisperX transcribes and types each phrase after you pause (default 1.5 s). Release the hotkey to flush any remaining speech.
+
+Streaming uses more CPU/GPU than batch mode. Leave it off for the default record-then-insert workflow.
 
 ## Autostart
 

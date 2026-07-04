@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kwhisperx"
-version = "0.2.3"
+version = "0.3.3"
 description = "Kubuntu X11 tray dictation with faster-whisper"
 readme = "README.md"
 requires-python = ">=3.10"

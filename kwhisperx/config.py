@@ -20,6 +20,8 @@ class Config:
     language: str = "en"
     microphone: int | None = None
     injection_method: str = "auto"  # auto | clipboard | terminal | keystrokes
+    chunk_injection: bool = False
+    silence_seconds: float = 1.5
     autostart: bool = False
     install_path: str = ""
     models_dir: str = ""  # default: ~/.local/share/kwhisperx/models

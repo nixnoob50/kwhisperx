@@ -5,6 +5,34 @@ All notable changes to KWhisperX are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - 2026-07-03
+
+### Changed
+- Tray icons: white badge (idle) and red badge (listening) using the theme microphone for visibility on dark panels
+
+### Fixed
+- Tray icon missing-icon flash on KDE when starting/stopping (status in tooltip; no notification hijack)
+- Blank idle tray icon on startup
+
+## [0.3.2] - 2026-07-03
+
+### Fixed
+- Streaming pause detection rewritten with 50 ms window scan (finds speech end vs mic noise floor)
+- Diagnostic log every ~2 s while listening in streaming mode (`peak`, `tail_avg`, `threshold`)
+
+## [0.3.1] - 2026-07-03
+
+### Fixed
+- Streaming mode crash (`QThread destroyed while still running`) by keeping workers alive until the thread exits
+- Pause detection too strict on noisy mics; uses adaptive silence threshold relative to speech level
+
+## [0.3.0] - 2026-07-03
+
+### Added
+- Optional **Inject on pauses (streaming)** for keystrokes and terminal injection modes
+- Configurable pause duration (1.0–3.0 s); text is appended after each pause while listening continues
+- Default remains batch transcribe-on-stop (unchanged behavior when streaming is off)
+
 ## [0.2.3] - 2026-07-03
 
 ### Added

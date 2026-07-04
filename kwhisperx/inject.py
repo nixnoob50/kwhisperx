@@ -46,6 +46,33 @@ def uses_clipboard(method: str) -> bool:
     return method in ("auto", "clipboard", "terminal")
 
 
+def supports_chunk_injection(method: str) -> bool:
+    """True when pause-based streaming injection is supported."""
+    return method in ("keystrokes", "terminal")
+
+
+def inject_append(
+    text: str,
+    window_id: str | None,
+    method: str,
+    *,
+    first_chunk: bool,
+) -> bool:
+    """Append transcribed text during a streaming session (keystrokes / terminal)."""
+    if not text.strip():
+        return True
+    if not supports_chunk_injection(method):
+        return False
+    if not shutil.which("xdotool"):
+        log.error("xdotool not found")
+        return False
+    if not window_id:
+        log.error("No target window id")
+        return False
+    prefix = "" if first_chunk else " "
+    return _inject_keystrokes(prefix + text, window_id)
+
+
 def inject_text(
     text: str,
     window_id: str | None,
