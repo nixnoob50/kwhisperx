@@ -7,6 +7,8 @@ name = "kwhisperx"
 version = "0.3.5"
 description = "Kubuntu X11 tray dictation with faster-whisper"
 readme = "README.md"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = [
     "PyQt6>=6.5",

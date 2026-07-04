@@ -124,6 +124,12 @@ To download another model (e.g. after changing model in Settings):
 - **Hotkey conflicts** — change hotkey in Settings if it clashes with KDE shortcuts
 - **Terminal paste** — set Injection to `terminal` for Konsole (`Ctrl+Shift+V`)
 
+## License
+
+KWhisperX is free software licensed under the [GNU General Public License v3.0 or later](LICENSE).
+
+Runtime dependencies (PyQt6, faster-whisper, pynput, etc.) are governed by their own licenses. Whisper models downloaded during setup are subject to separate terms on Hugging Face.
+
 ## Development
 
 See [agent.md](agent.md) and [plan.md](plan.md).
