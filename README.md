@@ -2,15 +2,21 @@
 
 Voice dictation tray app for **Kubuntu on X11**. Press a global hotkey to start/stop listening; when you stop, faster-whisper transcribes locally and the text is pasted into whatever window had focus.
 
-**Version:** 0.3.3 — see [CHANGELOG.md](CHANGELOG.md) for release history.
+**Version:** 0.3.4 — see [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## Requirements
+
+- **X11** session (`XDG_SESSION_TYPE=x11`) — Wayland is not supported
+- **xdotool** — required to paste transcribed text into the focused window
+- Python 3.10+ with venv, PortAudio (`libportaudio2`) for the microphone
 
 System packages (Kubuntu):
 
 ```bash
 sudo apt install python3-venv python3-dev xdotool libportaudio2
 ```
+
+Without `xdotool`, the app can record and transcribe but **cannot inject text**.
 
 ## Install
 

@@ -13,7 +13,7 @@ from PyQt6.QtCore import QObject, QThread, QTimer, Qt, QSize, pyqtSignal
 from PyQt6.QtGui import QAction, QColor, QIcon, QPainter, QPixmap
 from PyQt6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
-from kwhisperx.audio import AudioRecorder, has_audio
+from kwhisperx.audio import AudioRecorder, audio_rms, effective_pause_drop_ratio, has_audio
 from kwhisperx.config import Config
 from kwhisperx.dbus_service import DbusService
 from kwhisperx.hotkey import HotkeyManager
@@ -193,7 +193,10 @@ class DictationApp(QObject):
         self.config = config
         self.state = "idle"
         self._target_window: str | None = None
-        self._recorder = AudioRecorder(device=config.microphone)
+        self._recorder = AudioRecorder(
+            device=config.microphone,
+            pause_noise_floor=config.pause_noise_floor,
+        )
         self._worker: TranscribeWorker | None = None
         self._hotkeys: HotkeyManager | None = None
         self._tray: QSystemTrayIcon | None = None
@@ -319,7 +322,10 @@ class DictationApp(QObject):
         self._chunk_count = 0
         self._words_injected = 0
         try:
-            self._recorder = AudioRecorder(device=self.config.microphone)
+            self._recorder = AudioRecorder(
+                device=self.config.microphone,
+                pause_noise_floor=self.config.pause_noise_floor,
+            )
             self._recorder.start()
         except Exception as exc:
             log.exception("failed to start audio")
@@ -330,6 +336,11 @@ class DictationApp(QObject):
             self._chunk_timer.setInterval(200)
             self._chunk_timer.timeout.connect(self._poll_for_chunk)
             self._chunk_timer.start()
+            log.info(
+                "Streaming enabled: pause=%.1fs sensitivity=%.0f%%",
+                self.config.silence_seconds,
+                effective_pause_drop_ratio(self.config.pause_noise_floor) * 100,
+            )
         self._set_state("listening", "Listening…")
 
     def _stop_chunk_timer(self) -> None:
@@ -342,13 +353,12 @@ class DictationApp(QObject):
         if self.state != "listening" or self._streaming_finishing:
             return
         silence = self.config.silence_seconds
-        if not self._recorder.poll_utterance_end(silence_sec=silence):
+        chunk = self._recorder.try_extract_chunk(silence_sec=silence)
+        if not has_audio(chunk):
             self._recorder.log_pause_diagnostics(silence_sec=silence)
             return
-        chunk = self._recorder.extract_chunk(silence_sec=silence)
-        if has_audio(chunk):
-            log.info("Streaming chunk ready (%.2fs)", len(chunk) / self._recorder.samplerate)
-            self._enqueue_chunk(chunk, is_final=False)
+        log.info("Streaming chunk ready (%.2fs)", len(chunk) / self._recorder.samplerate)
+        self._enqueue_chunk(chunk, is_final=False)
 
     def _enqueue_chunk(self, audio: np.ndarray, *, is_final: bool) -> None:
         self._pending_jobs.append((audio, is_final))
@@ -399,6 +409,11 @@ class DictationApp(QObject):
             self._streaming_finishing = True
 
             if has_audio(remainder):
+                log.info(
+                    "Streaming remainder %.2fs (RMS=%.5f)",
+                    len(remainder) / self._recorder.samplerate,
+                    audio_rms(remainder),
+                )
                 self._enqueue_chunk(remainder, is_final=True)
             elif (
                 self._chunk_count == 0
@@ -416,6 +431,11 @@ class DictationApp(QObject):
             return
 
         audio = self._recorder.stop()
+        log.info(
+            "Recorded %.2fs audio (RMS=%.5f)",
+            len(audio) / self._recorder.samplerate,
+            audio_rms(audio),
+        )
         if not has_audio(audio):
             self._set_state("idle", "No audio detected")
             return

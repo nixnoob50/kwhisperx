@@ -22,6 +22,7 @@ class Config:
     injection_method: str = "auto"  # auto | clipboard | terminal | keystrokes
     chunk_injection: bool = False
     silence_seconds: float = 1.5
+    pause_noise_floor: float = 0.50  # drop ratio: pause must fall below this fraction of peak speech
     autostart: bool = False
     install_path: str = ""
     models_dir: str = ""  # default: ~/.local/share/kwhisperx/models

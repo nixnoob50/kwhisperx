@@ -10,6 +10,8 @@ from pathlib import Path
 
 import numpy as np
 
+from kwhisperx.audio import prepare_for_transcription
+
 log = logging.getLogger(__name__)
 
 _model = None
@@ -150,6 +152,7 @@ def transcribe(
         return ""
     if audio.dtype != np.float32:
         audio = audio.astype(np.float32)
+    audio = prepare_for_transcription(audio)
     root = models_dir(models_path)
     model = _get_model(model_size, device, root)
     lang = None if not language or language.lower() == "auto" else language

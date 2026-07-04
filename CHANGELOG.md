@@ -5,6 +5,23 @@ All notable changes to KWhisperX are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4] - 2026-07-04
+
+### Added
+- **Pause sensitivity** slider in Settings (streaming mode) to tune how much quieter a pause must be vs. speech
+- `setup.sh` checks for `xdotool` before install; README documents it as a required dependency
+
+### Changed
+- Default microphone routes through PulseAudio/PipeWire instead of raw ALSA hardware
+- Microphone opens at a device-native sample rate and resamples to 16 kHz for Whisper
+- Streaming pause detection uses a stateful tracker (session speech peak) instead of re-scanning the full buffer
+- Quiet captures are normalized before transcription
+
+### Fixed
+- `PortAudioError: Invalid sample rate` on hardware that rejects 16 kHz capture
+- Streaming pause detection failing when mic RMS stays near room-noise level during pauses
+- Missing `numpy` import in `transcribe.py` after audio normalization was added
+
 ## [0.3.3] - 2026-07-03
 
 ### Changed

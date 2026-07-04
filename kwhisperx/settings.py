@@ -18,11 +18,16 @@ from PyQt6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QSlider,
     QVBoxLayout,
     QWidget,
 )
 
-from kwhisperx.audio import AudioRecorder
+from kwhisperx.audio import (
+    AudioRecorder,
+    pause_noise_floor_from_slider,
+    pause_noise_slider_from_floor,
+)
 from kwhisperx.config import Config
 from kwhisperx.inject import supports_chunk_injection
 
@@ -141,7 +146,7 @@ class SettingsDialog(QDialog):
         form.addRow("Language:", self.language_edit)
 
         self.mic_combo = QComboBox()
-        self.mic_combo.addItem("System default", None)
+        self.mic_combo.addItem("System default (PulseAudio)", None)
         for idx, name in AudioRecorder.list_input_devices():
             self.mic_combo.addItem(f"{name} ({idx})", idx)
         if self._config.microphone is not None:
@@ -166,6 +171,21 @@ class SettingsDialog(QDialog):
         self.silence_spin.setSuffix(" s")
         self.silence_spin.setValue(self._config.silence_seconds)
         form.addRow("Pause duration:", self.silence_spin)
+
+        pause_noise_row = QHBoxLayout()
+        self.pause_noise_slider = QSlider(Qt.Orientation.Horizontal)
+        self.pause_noise_slider.setRange(0, 100)
+        self.pause_noise_slider.setValue(pause_noise_slider_from_floor(self._config.pause_noise_floor))
+        self.pause_noise_slider.setToolTip(
+            "How much quieter a pause must be compared with your loudest speech. "
+            "Raise if pauses are not detected; lower if speech gets cut off early."
+        )
+        self.pause_noise_value = QLabel()
+        self.pause_noise_slider.valueChanged.connect(self._update_pause_noise_label)
+        self._update_pause_noise_label(self.pause_noise_slider.value())
+        pause_noise_row.addWidget(self.pause_noise_slider, stretch=1)
+        pause_noise_row.addWidget(self.pause_noise_value)
+        form.addRow("Pause sensitivity:", pause_noise_row)
 
         self._streaming_note = QLabel(
             "Streaming inserts text after pauses while you keep listening. "
@@ -199,11 +219,17 @@ class SettingsDialog(QDialog):
         supported = supports_chunk_injection(method)
         self.chunk_check.setEnabled(supported)
         self.silence_spin.setEnabled(supported and self.chunk_check.isChecked())
+        self.pause_noise_slider.setEnabled(supported and self.chunk_check.isChecked())
+        self.pause_noise_value.setEnabled(supported and self.chunk_check.isChecked())
         if not supported:
             self.chunk_check.setToolTip("Only available for keystrokes or terminal injection")
         else:
             self.chunk_check.setToolTip("")
         self._streaming_note.setVisible(supported)
+
+    def _update_pause_noise_label(self, value: int) -> None:
+        ratio = pause_noise_floor_from_slider(value)
+        self.pause_noise_value.setText(f"{ratio * 100:.0f}%")
 
     def apply_to(self, config: Config) -> None:
         config.hotkey = self.hotkey_edit.text().strip() or config.hotkey
@@ -217,6 +243,7 @@ class SettingsDialog(QDialog):
             config.injection_method
         )
         config.silence_seconds = self.silence_spin.value()
+        config.pause_noise_floor = pause_noise_floor_from_slider(self.pause_noise_slider.value())
         config.autostart = self.autostart_check.isChecked()
         config.save()
         _sync_autostart(config)
