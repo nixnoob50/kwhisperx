@@ -41,10 +41,17 @@ def _paste_keys(method: str) -> list[str]:
     return ["--clearmodifiers", "ctrl+v"]
 
 
+def uses_clipboard(method: str) -> bool:
+    """True when injection may copy text to the system clipboard."""
+    return method in ("auto", "clipboard", "terminal")
+
+
 def inject_text(
     text: str,
     window_id: str | None,
     method: str = "auto",
+    *,
+    clipboard=None,
 ) -> bool:
     if not text.strip():
         return True
@@ -61,6 +68,8 @@ def inject_text(
             if _inject_keystrokes(text, window_id):
                 return True
             continue
+        if clipboard is not None:
+            clipboard.setText(text)
         if _inject_paste(text, window_id, m):
             return True
     return False
@@ -99,12 +108,27 @@ def _inject_paste(text: str, window_id: str, method: str) -> bool:
 
 
 def _inject_keystrokes(text: str, window_id: str) -> bool:
-    current = get_focused_window_id()
-    focused = False
-    if current != window_id:
-        focused = _run_xdotool(["windowfocus", "--sync", window_id])
-        time.sleep(0.05)
-    ok = _run_xdotool(["type", "--delay", "1", "--", text])
-    if focused and current:
-        _run_xdotool(["windowfocus", "--sync", current])
-    return ok
+    # Slow enough for Qt/GTK apps to consume events in order; --file avoids
+    # argv parsing issues with commas and other punctuation from Whisper.
+    time.sleep(0.1)
+    result = subprocess.run(
+        [
+            "xdotool",
+            "type",
+            "--window",
+            window_id,
+            "--delay",
+            "15",
+            "--clearmodifiers",
+            "--file",
+            "-",
+        ],
+        input=text,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        log.debug("xdotool type failed stderr=%s", result.stderr.strip())
+        return False
+    return True

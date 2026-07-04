@@ -10,14 +10,15 @@ from pathlib import Path
 
 import numpy as np
 from PyQt6.QtCore import QObject, QThread, pyqtSignal
-from PyQt6.QtGui import QAction, QClipboard, QIcon
+from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from kwhisperx.audio import AudioRecorder, has_audio
 from kwhisperx.config import Config
 from kwhisperx.dbus_service import DbusService
 from kwhisperx.hotkey import HotkeyManager
-from kwhisperx.inject import get_focused_window_id, inject_text
+from kwhisperx.inject import get_focused_window_id, inject_text, uses_clipboard
+from kwhisperx.single_instance import acquire, notify_already_running, release
 from kwhisperx.settings import SettingsDialog
 from kwhisperx.transcribe import configure_offline_mode, transcribe
 
@@ -194,15 +195,23 @@ class DictationApp(QObject):
             self._set_state("idle", "No speech detected")
             return
         app = QApplication.instance()
-        if app:
-            clipboard: QClipboard = app.clipboard()
-            clipboard.setText(text)
-        ok = inject_text(text, self._target_window, self.config.injection_method)
+        clipboard = app.clipboard() if app else None
+        method = self.config.injection_method
+        ok = inject_text(
+            text,
+            self._target_window,
+            method,
+            clipboard=clipboard if uses_clipboard(method) else None,
+        )
         if ok:
             words = len(text.split())
             self._set_state("idle", f"Inserted {words} word(s)")
-        else:
+        elif uses_clipboard(method) and clipboard is not None:
+            clipboard.setText(text)
             self._set_state("error", "Failed to inject text — copied to clipboard")
+            self._set_state("idle")
+        else:
+            self._set_state("error", "Failed to inject text")
             self._set_state("idle")
 
     def _on_transcribe_failed(self, message: str) -> None:
@@ -240,6 +249,7 @@ class DictationApp(QObject):
             self._set_state("idle")
             return
         self._set_state("idle", "Restarting to apply model/compute changes…")
+        release()
         subprocess.Popen(
             [str(run_sh.resolve())],
             cwd=str(run_sh.parent),
@@ -271,8 +281,13 @@ def run_app() -> None:
     app.setApplicationName("KWhisperX")
     app.setQuitOnLastWindowClosed(False)
 
+    if not acquire():
+        notify_already_running()
+        sys.exit(0)
+
     config = Config.load()
     dictation = DictationApp(config)
     dictation.setup_tray(app)
     app.aboutToQuit.connect(dictation.shutdown)
+    app.aboutToQuit.connect(release)
     sys.exit(app.exec())
