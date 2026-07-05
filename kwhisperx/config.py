@@ -44,6 +44,10 @@ class Config:
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
         CONFIG_FILE.write_text(json.dumps(asdict(self), indent=2) + "\n")
 
+    def allows_chunk_injection(self) -> bool:
+        """True when pause-based streaming is allowed (toggle mode + user opt-in)."""
+        return self.hotkey_mode == "toggle" and self.chunk_injection
+
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 

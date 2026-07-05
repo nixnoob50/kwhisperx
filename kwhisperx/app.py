@@ -213,7 +213,7 @@ class DictationApp(QObject):
         self._hotkey_hold_stop.connect(self.stop_listening)
 
     def _use_streaming(self) -> bool:
-        return self.config.chunk_injection and supports_chunk_injection(
+        return self.config.allows_chunk_injection() and supports_chunk_injection(
             self.config.injection_method
         )
 

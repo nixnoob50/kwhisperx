@@ -13,8 +13,13 @@ class TestConfigDefaults:
     def test_streaming_off_by_default(self) -> None:
         cfg = Config()
         assert cfg.chunk_injection is False
+        assert cfg.allows_chunk_injection() is False
         assert cfg.silence_seconds == 1.5
         assert cfg.pause_noise_floor == 0.50
+
+    def test_streaming_disabled_in_hold_mode(self) -> None:
+        cfg = Config(hotkey_mode="hold", chunk_injection=True, injection_method="keystrokes")
+        assert cfg.allows_chunk_injection() is False
 
     def test_load_ignores_unknown_keys(self, tmp_path, monkeypatch) -> None:
         config_file = tmp_path / "config.json"

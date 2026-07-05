@@ -161,16 +161,20 @@ class SettingsDialog(QDialog):
         self.inject_combo.setCurrentText(self._config.injection_method)
         form.addRow("Injection:", self.inject_combo)
 
+        self._streaming_widget = QWidget()
+        streaming_form = QFormLayout(self._streaming_widget)
+        streaming_form.setContentsMargins(0, 0, 0, 0)
+
         self.chunk_check = QCheckBox("Inject on pauses (streaming)")
         self.chunk_check.setChecked(self._config.chunk_injection)
-        form.addRow("", self.chunk_check)
+        streaming_form.addRow("", self.chunk_check)
 
         self.silence_spin = QDoubleSpinBox()
         self.silence_spin.setRange(1.0, 3.0)
         self.silence_spin.setSingleStep(0.1)
         self.silence_spin.setSuffix(" s")
         self.silence_spin.setValue(self._config.silence_seconds)
-        form.addRow("Pause duration:", self.silence_spin)
+        streaming_form.addRow("Pause duration:", self.silence_spin)
 
         pause_noise_row = QHBoxLayout()
         self.pause_noise_slider = QSlider(Qt.Orientation.Horizontal)
@@ -185,18 +189,21 @@ class SettingsDialog(QDialog):
         self._update_pause_noise_label(self.pause_noise_slider.value())
         pause_noise_row.addWidget(self.pause_noise_slider, stretch=1)
         pause_noise_row.addWidget(self.pause_noise_value)
-        form.addRow("Pause sensitivity:", pause_noise_row)
+        streaming_form.addRow("Pause sensitivity:", pause_noise_row)
 
         self._streaming_note = QLabel(
             "Streaming inserts text after pauses while you keep listening. "
             "Uses keystroke typing (keystrokes / terminal modes only) and more CPU than batch mode."
         )
         self._streaming_note.setWordWrap(True)
-        form.addRow("", self._streaming_note)
+        streaming_form.addRow("", self._streaming_note)
 
+        form.addRow(self._streaming_widget)
+
+        self.mode_combo.currentTextChanged.connect(self._update_streaming_controls)
         self.inject_combo.currentTextChanged.connect(self._update_streaming_controls)
         self.chunk_check.toggled.connect(self._update_streaming_controls)
-        self._update_streaming_controls(self._config.injection_method)
+        self._update_streaming_controls()
 
         self.autostart_check = QCheckBox("Start at login")
         self.autostart_check.setChecked(self._config.autostart)
@@ -214,7 +221,12 @@ class SettingsDialog(QDialog):
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
 
-    def _update_streaming_controls(self, _method: str | None = None) -> None:
+    def _update_streaming_controls(self, _trigger: str | bool | None = None) -> None:
+        if self.mode_combo.currentText() == "hold":
+            self._streaming_widget.setVisible(False)
+            return
+
+        self._streaming_widget.setVisible(True)
         method = self.inject_combo.currentText()
         supported = supports_chunk_injection(method)
         self.chunk_check.setEnabled(supported)
@@ -239,9 +251,10 @@ class SettingsDialog(QDialog):
         config.language = self.language_edit.text().strip() or "en"
         config.microphone = self.mic_combo.currentData()
         config.injection_method = self.inject_combo.currentText()
-        config.chunk_injection = self.chunk_check.isChecked() and supports_chunk_injection(
-            config.injection_method
-        )
+        if self.mode_combo.currentText() != "hold":
+            config.chunk_injection = self.chunk_check.isChecked() and supports_chunk_injection(
+                config.injection_method
+            )
         config.silence_seconds = self.silence_spin.value()
         config.pause_noise_floor = pause_noise_floor_from_slider(self.pause_noise_slider.value())
         config.autostart = self.autostart_check.isChecked()
